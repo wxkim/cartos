@@ -6,7 +6,16 @@
 .extern kernel_get_task
 
 PendSV_Handler:
-    cpsid I    // change PE State; globally disables interrupts
+    cpsid I         @ change processor state, interrupt disable; globally disables interrupts
 
-    ldr r0, =current_task //
+    mrs r0, psp     @ move special register; move process stack ptr to r0
+
+    tst lr, #0x10   @ "test" a masking of the link register. bit 4 is 0 if the FPU was used
+
+    it eq           @ if-then if previous instruction has state "equal"
+
+    vstmdb r0!, {s16-s31} @ vector store multiple decrememnt descending
+    skip_fpu_cs:
+
+    ldr r0, =current_task @
     ldr r1, [r0]

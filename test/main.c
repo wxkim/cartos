@@ -9,7 +9,7 @@ extern void gpio_toggle_atomic(uint32_t portbase, uint32_t pin);
 
 extern void b_delay(uint32_t ms);
 
-void main() {
+int main() {
   gpio_init(GPIOA_BASE, 5, 1);
   while (1) {
     gpio_toggle_atomic(GPIOA_BASE, 5);
