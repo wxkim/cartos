@@ -14,8 +14,10 @@ PendSV_Handler:
 
     it eq           @ if-then if previous instruction has state "equal"
 
-    vstmdb r0!, {s16-s31} @ vector store multiple decrememnt descending
-    skip_fpu_cs:
+    vstmdbeq r0!, {s16-s31} @ vector store multiple decrememnt descending
+    @ skip_fpu_cs:
 
     ldr r0, =current_task @
     ldr r1, [r0]
+
+    stmdbeq r0!, {r1-r11}
