@@ -6,20 +6,35 @@
 .extern kernel_get_task
 
 PendSV_Handler:
-    cpsid I         @ change processor state, interrupt disable; globally disables interrupts
+    cpsid i                     @ change processor state, interrupt disable; globally disables interrupts
 
-    mrs r0, psp     @ move special register; move process stack ptr to r0
+    mrs r0, psp                 @ move special register; move process stack ptr to r0
+    tst lr, #0x10               @ "test" a masking of the link register. bit 4 is 0 if the FPU was used
+    it eq                       @ if-then if previous instruction has state "equal"
+    vstmdbeq r0!, {s16-s31}     @ vector store multiple decrememnt descending if EQ, for FPU registers
+    stmdb r0!, {r4-r11}         @ save the normal registers
 
-    tst lr, #0x10   @ "test" a masking of the link register. bit 4 is 0 if the FPU was used
+    ldr r1, =kernel
+    ldr r2, [r1]                @ r2 = kernel.current_task 
+    str r0, [r2]                @ TCB->stack_ptr = r0 
 
-    it eq           @ if-then if previous instruction has state "equal"
+    push {lr}                   
+    bl kernel_get_task       
+    pop {lr}
 
-    vstmdbeq r0!, {s16-s31} @ vector store multiple decrememnt descending
-    @ skip_fpu_cs:
-
-    ldr r0, =current_task @
-    ldr r1, [r0]
-
-    stmdbeq r0!, {r1-r11}
-
+    ldr r1, =kernel
+    str r0, [r1]                @ kernel.current_task = next_tcb
+    ldr r0, [r0]                @ r0 = next_tcb->stack_ptr
     
+    ldmia r0!, {r4-r11}         @ restore registers
+    tst lr, #0x10               @ restore fpu
+    it eq
+    vldmiaeq r0!, {s16-s31}
+    
+    msr psp, r0                 @ update psp
+    cpsie i                     @ enable interrupts
+    bx lr                       @ ret
+
+
+
+kernel_start:
