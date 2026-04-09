@@ -7,4 +7,5 @@ edition = "2024"
 
 [lib]
 name = "kernel"
-crate-type = ["staticlib"] 
+path = "kernel/lib.rs"  
+crate-type = ["staticlib"]
