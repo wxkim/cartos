@@ -5,6 +5,9 @@
 .extern kernel
 .extern kernel_get_task
 
+.global PendSV_Handler
+.type PendSV_Handler, %function
+.thumb_func
 PendSV_Handler:
     cpsid i                     @ change processor state, interrupt disable; globally disables interrupts
 
@@ -36,5 +39,20 @@ PendSV_Handler:
     bx lr                       @ ret
 
 
+.global launch
+.type launch, %function
+.thumb_func
+launch:
+    ldr r0, =rtos
+    ldr r0, [r0, #0]            @ r0 = rtos.current_task (TCB pointer)
+    ldr r0, [r0, #0]            @ r0 = TCB->stack_ptr
 
-kernel_start:
+    ldmia r0!, {r4-r11}         @ load multiple increment after
+
+    msr psp, r0
+    mov r1, #2                  @ set bit 1 of CONTROL to use the PSP
+    msr control, r1
+    isb                         @ instruction sync barrier
+
+    pop {r0-r3, r12, lr}
+    pop {pc}
