@@ -1,40 +1,54 @@
 CC      = arm-none-eabi-gcc
-AS      = arm-none-eabi-as
+AS      = arm-none-eabi-gcc
 LD      = arm-none-eabi-gcc
 OBJCOPY = arm-none-eabi-objcopy
 
+BUILD_DIR = build
+K_DIR     = kernel
+APP_DIR   = app
+SERV_DIR  = services
+LIB_DIR   = lib
+
 CPU_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
-CFLAGS  = $(CPU_FLAGS) -Wall -O2 -ffunction-sections -fdata-sections -Itest
-ASFLAGS = $(CPU_FLAGS)
-LDFLAGS = $(CPU_FLAGS) -Tlinker.ld -Wl,--gc-sections -nostartfiles
+CFLAGS  = $(CPU_FLAGS) -Wall -O2 -ffunction-sections -fdata-sections -Iinclude -I$(APP_DIR)
+ASFLAGS = $(CPU_FLAGS) -c
+LDFLAGS = $(CPU_FLAGS) -Tlink.ld -Wl,--gc-sections -nostartfiles
 
-ASM_SOURCES = src/startup.s src/context.s lib/delay.s lib/gpio.s
-C_SOURCES   = test/main.c
-RUST_LIB    = kernel-rs/target/thumbv7em-none-eabihf/release/libkernel_rs.a
+ASM_SOURCES = $(SERV_DIR)/startup.s $(SERV_DIR)/context.s $(LIB_DIR)/delay.s $(LIB_DIR)/gpio.s
+C_SOURCES   = $(APP_DIR)/main.c
 
-OBJECTS = $(ASM_SOURCES:.s=.o) $(C_SOURCES:.c=.o)
+RUST_TARGET = thumbv7em-none-eabihf
+RUST_LIB    = $(K_DIR)/target/$(RUST_TARGET)/release/libkernel.a
 
-all: rtos.bin
+OBJECTS = $(addprefix $(BUILD_DIR)/, $(notdir $(ASM_SOURCES:.s=.o)))
+OBJECTS += $(addprefix $(BUILD_DIR)/, $(notdir $(C_SOURCES:.c=.o)))
+
+VPATH = $(SERV_DIR):$(LIB_DIR):$(APP_DIR)
+
+all: $(BUILD_DIR)/rtos.bin
+
+$(BUILD_DIR):
+	mkdir -p $@
 
 $(RUST_LIB):
-	@echo "Building Rust Kernel..."
-	cd kernel-rs && cargo build --release --target thumbv7em-none-eabihf
+	@echo "Building Rust Kernel"
+	cargo build --release --target $(RUST_TARGET)
 
-%.o: %.s
+$(BUILD_DIR)/%.o: %.s | $(BUILD_DIR)
 	$(AS) $(ASFLAGS) $< -o $@
 
-%.o: %.c
+$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-rtos.elf: $(OBJECTS) $(RUST_LIB)
+$(BUILD_DIR)/rtos.elf: $(OBJECTS) $(RUST_LIB)
 	$(LD) $(LDFLAGS) $(OBJECTS) $(RUST_LIB) -o $@
 
-rtos.bin: rtos.elf
+$(BUILD_DIR)/rtos.bin: $(BUILD_DIR)/rtos.elf
 	$(OBJCOPY) -O binary $< $@
 
 clean:
-	rm -f $(OBJECTS) *.elf *.bin
-	cd kernel-rs && cargo clean
+	rm -rf $(BUILD_DIR)
+	cargo clean
 
 .PHONY: all clean $(RUST_LIB)
