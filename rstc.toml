@@ -1,0 +1,4 @@
+[toolchain]
+channel = "nightly"
+targets = ["thumbv7em-none-eabihf", "aarch64-apple-darwin"]
+components = ["rust-src", "rust-analyzer"]

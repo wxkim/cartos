@@ -3,7 +3,7 @@ use core::ffi::c_void;
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Priority {
-    None = 5,
+    Idle = 5,
     Low = 4,
     Normal = 3,
     High = 2,

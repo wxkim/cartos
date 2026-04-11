@@ -13,13 +13,13 @@ CPU_FLAGS = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 CFLAGS  = $(CPU_FLAGS) -Wall -O2 -ffunction-sections -fdata-sections -Iinclude -I$(APP_DIR)
 ASFLAGS = $(CPU_FLAGS) -c
-LDFLAGS = $(CPU_FLAGS) -Tlink.ld -Wl,--gc-sections -nostartfiles
+LDFLAGS = $(CPU_FLAGS) -Tlink.ld -Wl,--gc-sections -nostartfiles -nostdlib
 
 ASM_SOURCES = $(SERV_DIR)/startup.s $(SERV_DIR)/context.s $(LIB_DIR)/delay.s $(LIB_DIR)/gpio.s
 C_SOURCES   = $(APP_DIR)/main.c
 
 RUST_TARGET = thumbv7em-none-eabihf
-RUST_LIB    = $(K_DIR)/target/$(RUST_TARGET)/release/libkernel.a
+RUST_LIB    = target/$(RUST_TARGET)/release/libkernel.a
 
 OBJECTS = $(addprefix $(BUILD_DIR)/, $(notdir $(ASM_SOURCES:.s=.o)))
 OBJECTS += $(addprefix $(BUILD_DIR)/, $(notdir $(C_SOURCES:.c=.o)))
@@ -33,7 +33,9 @@ $(BUILD_DIR):
 
 $(RUST_LIB):
 	@echo "Building Rust Kernel"
-	cargo build --release --target $(RUST_TARGET)
+	rustup run nightly cargo build --release \
+		-Z build-std=core \
+		--target $(RUST_TARGET)
 
 $(BUILD_DIR)/%.o: %.s | $(BUILD_DIR)
 	$(AS) $(ASFLAGS) $< -o $@

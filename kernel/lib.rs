@@ -1,6 +1,5 @@
 #![no_std]
 use crate::kernel::{KernelState, TCB_Handle};
-use core::ffi::c_void;
 
 pub mod kernel;
 pub mod scheduler;
@@ -9,17 +8,17 @@ pub mod scheduler;
 pub static mut kernel: KernelState = KernelState::new();
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn init_kernel(T: *mut TCB_Handle, arg: *mut core::ffi::c_void) {
+pub unsafe extern "C" fn init_kernel(tcb: *mut TCB_Handle, arg: *mut core::ffi::c_void) {
     unsafe {
-        let sp = (*T).sptr;
-        let sphw = preemption_stack(sp, (*T).function as u32, arg as u32);
+        let sp = (*tcb).sptr;
+        let sphw = preemption_stack(sp, (*tcb).function as u32, arg as u32);
 
         let mut sp: *mut u32 = sphw;
         for _ in 0..8 {
             sp = sp.offset(-1);
             *sp = 0; // Initial values for R4-R11
         }
-        (*T).sptr = sp;
+        (*tcb).sptr = sp;
     }
 }
 
