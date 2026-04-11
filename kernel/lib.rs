@@ -3,6 +3,7 @@ use crate::kernel::{KernelState, TCB_Handle};
 
 pub mod kernel;
 pub mod scheduler;
+pub mod services;
 
 #[unsafe(no_mangle)]
 pub static mut kernel: KernelState = KernelState::new();

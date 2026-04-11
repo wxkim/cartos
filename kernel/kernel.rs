@@ -22,7 +22,7 @@ pub struct TCB_Handle {
 pub struct KernelState {
     pub current_task: *mut TCB_Handle,
     pub systick_ctr: u32,
-    pub ready_lists: [*mut TCB_Handle; 6],
+    pub ready_queue: [*mut TCB_Handle; 6],
 }
 
 impl KernelState {
@@ -30,7 +30,7 @@ impl KernelState {
         Self {
             current_task: core::ptr::null_mut(),
             systick_ctr: 0,
-            ready_lists: [core::ptr::null_mut(); 6],
+            ready_queue: [core::ptr::null_mut(); 6],
         }
     }
 }
