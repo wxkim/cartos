@@ -3,7 +3,9 @@
 .thumb
 
 .extern kernel
-.extern kernel_get_task
+.extern kernel_next_task
+.type kernel_next_task, %function  
+.thumb_func
 
 .global PendSV_Handler
 .type PendSV_Handler, %function
@@ -22,7 +24,7 @@ PendSV_Handler:
     str r0, [r2]                @ TCB->stack_ptr = r0 
 
     push {lr}                   @ EXC_RETURN is automatically populated into the Link Register on entry to an exception
-    bl kernel_get_task          @ call the next task function
+    bl kernel_next_task         @ call the next task function
     pop {lr}                    @ preserve EXC_RETURN
 
     ldr r1, =kernel
@@ -56,3 +58,12 @@ os_kernel_launch:
 
     pop {r0-r3, r12, lr}
     pop {pc}                    @ ret
+
+
+.global SysTick_Handler
+.type SysTick_Handler, %function
+.thumb_func
+SysTick_Handler:
+    push {lr}
+    bl tick_handler    
+    pop {pc}

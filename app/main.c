@@ -1,18 +1,26 @@
-#include "../include/stm32g474xx.h"
+#include "main.h"
+#include <stdint.h>
+TCB_Handle tcb1;
+uint32_t stack1[128] __attribute__((aligned(8)));
 
-void delay(volatile int count) {
-  while (count--)
-    __asm("nop");
+void task_code(void *arg) {
+  while (1)
+    ;
 }
 
-int main(void) {
-  RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+void SystemInit(void) {}
+void __libc_init_array(void) {}
 
-  GPIOA->MODER &= ~(3 << (5 * 2));
-  GPIOA->MODER |= (1 << (5 * 2));
+__attribute__((noreturn)) int main() {
 
-  while (1) {
+  tcb1.sptr = &stack1[127];
+  tcb1.function = task_code;
+  tcb1.prio = Normal;
 
-    delay(100000);
-  }
+  init_kernel(&tcb1, (void *)0x1234);
+  kernel_add_new_task(&tcb1);
+
+  os_kernel_launch();
+  while (1)
+    ;
 }

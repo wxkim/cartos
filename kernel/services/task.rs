@@ -1,7 +1,7 @@
 use crate::kernel::{KernelState, TCB_Handle};
 
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn kernel_add_task(tcb: *mut TCB_Handle) {
+pub unsafe extern "C" fn kernel_add_new_task(tcb: *mut TCB_Handle) {
     unsafe {
         let state = &mut *core::ptr::addr_of_mut!(crate::kernel);
 
