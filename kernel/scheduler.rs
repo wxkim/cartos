@@ -9,8 +9,8 @@ pub unsafe extern "C" fn kernel_next_task() -> *mut TCB_Handle {
 }
 
 unsafe fn schedule_next() -> *mut TCB_Handle {
-    let state = &mut *core::ptr::addr_of_mut!(crate::kernel);
     unsafe {
+        let state = &mut *core::ptr::addr_of_mut!(crate::kernel);
         for i in 0..6 {
             let head = state.ready_queue[i];
 
@@ -37,9 +37,8 @@ unsafe fn schedule_next() -> *mut TCB_Handle {
                 return head;
             }
         }
+        state.current_task
     }
-
-    state.current_task
 }
 
 #[unsafe(no_mangle)]
