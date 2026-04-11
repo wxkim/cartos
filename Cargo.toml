@@ -9,3 +9,9 @@ edition = "2024"
 name = "kernel"
 path = "kernel/lib.rs"  
 crate-type = ["staticlib"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
