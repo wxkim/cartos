@@ -51,7 +51,7 @@ pub unsafe extern "C" fn tick_handler() {
 }
 
 #[inline(always)]
-fn pended_service_ready() {
+pub fn pended_service_ready() {
     unsafe {
         core::ptr::write_volatile(ICSR, PENDSV);
     }
