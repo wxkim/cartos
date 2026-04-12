@@ -1,6 +1,6 @@
-use core::ptr::{null, null_mut};
+use core::ptr::null_mut;
 
-use crate::kernel::{KernelState, Priority, TCB_Handle};
+use crate::kernel::TCB_Handle;
 
 pub struct Mutex {
     lock: u32,
@@ -18,9 +18,8 @@ impl Mutex {
     }
     #[unsafe(no_mangle)]
     pub unsafe extern "C" fn lock(mutexptr: *mut Mutex) {
-        let mutex = &mut *mutexptr;
-
         unsafe {
+            let mutex = &mut *mutexptr;
             core::arch::asm!("cpsid i");
             let state = &mut *core::ptr::addr_of_mut!(crate::kernel);
             let current = state.current_task;
@@ -40,14 +39,13 @@ impl Mutex {
 
     #[unsafe(no_mangle)]
     pub unsafe extern "C" fn unlock(mutexptr: *mut Mutex) {
-        let mutex = &mut *mutexptr;
-
         unsafe {
+            let mutex = &mut *mutexptr;
             core::arch::asm!("cpsid i");
             let state = &mut *core::ptr::addr_of_mut!(crate::kernel);
             if mutex.waitlist.is_null() {
                 mutex.lock = 0;
-                mutex.waitlist == null_mut();
+                mutex.waitlist = null_mut();
             } else {
                 let next = mutex.waitlist;
                 mutex.waitlist = (*next).next;
